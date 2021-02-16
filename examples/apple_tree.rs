@@ -3,15 +3,18 @@
 extern crate kiss3d;
 extern crate nalgebra as na;
 
-use std::convert::Into;
+use std::boxed::Box;
+use std::convert::{From, Into};
 use std::default::Default;
+use std::prelude::v1::Vec;
 
 use kiss3d::light::Light;
 use kiss3d::window::Window;
+use ncollide3d::procedural::TriMesh;
+use rand::{Rng, thread_rng};
 
-use na::{Isometry3, Point3};
-use treegen::{TreeBranch, BranchPositions};
-use std::borrow::ToOwned;
+use na::{Isometry3, Point3, Rotation3, Translation3, UnitQuaternion, Vector3};
+use treegen::TreeBranch;
 
 extern crate treegen;
 
@@ -32,28 +35,27 @@ fn main() {
 
         tree.grow(growth_rate);
 
-        let positions = tree.node_positions(Isometry3::<f32>::identity());
-
-        draw_branch(&mut window, &positions);
+        draw_branch(&mut window, &mut tree, Isometry3::<f32>::identity());
     }
 }
 
-fn draw_branch(window: &mut Window, tree: &BranchPositions) {
+fn draw_branch(window: &mut Window, tree: &TreeBranch, mut base_pos : Isometry3<f32>) {
 
-    for (idx, (base_pos,children)) in tree.node_positions.iter().enumerate() {
+    for node in tree.nodes.iter() {
 
-        let seg_start: Point3<f32> = base_pos.translation.vector.into();
+        let seg_base_pos = base_pos * node.rotation;
 
-        let seg_end: Point3<f32> = if idx < tree.node_positions.len() - 1 {
-            tree.node_positions[idx+1].0.translation.vector.into()
-        } else {
-            tree.tip.to_owned()
-        };
+        let seg_start: Point3<f32> = seg_base_pos.translation.vector.into();
+
+
+        for (t, branch) in node.children.iter() {
+            draw_branch(window,branch,&seg_base_pos * &Translation3::new(0.0, node.length* t, 0.0));
+        }
+
+        base_pos = seg_base_pos * &Translation3::new(0.0, node.length, 0.0);
+        let seg_end: Point3<f32> = base_pos.translation.vector.into();
 
         window.draw_line(&seg_start, &seg_end, &Point3::new(0.6, 0.4, 0.2));
 
-        for child in children {
-            draw_branch(window, child);
-        }
     }
 }
