@@ -14,7 +14,8 @@ use ncollide3d::procedural::TriMesh;
 use rand::{Rng, thread_rng};
 
 use na::{Isometry3, Point3, Rotation3, Translation3, UnitQuaternion, Vector3};
-use treegen::TreeBranch;
+use treegen::Tree;
+use generational_arena::Index;
 
 extern crate treegen;
 
@@ -25,7 +26,7 @@ fn main() {
 
     window.set_light(Light::StickToCamera);
 
-    let mut tree = TreeBranch::default();
+    let mut tree = Tree::default();
 
     let mut growth_rate = 0.01;
 
@@ -35,21 +36,21 @@ fn main() {
 
         tree.grow(growth_rate);
 
-        draw_branch(&mut window, &mut tree, Isometry3::<f32>::identity());
+        draw_node(&mut window, &tree, tree.root_node, Isometry3::<f32>::identity());
     }
 }
 
-fn draw_branch(window: &mut Window, tree: &TreeBranch, mut base_pos : Isometry3<f32>) {
 
-    for node in tree.nodes.iter() {
+fn draw_node(window: &mut Window, tree: &Tree, node: Index, mut base_pos : Isometry3<f32>) {
+
+    let node = &tree.arena[node];
 
         let seg_base_pos = base_pos * node.rotation;
 
         let seg_start: Point3<f32> = seg_base_pos.translation.vector.into();
 
-
         for (t, branch) in node.children.iter() {
-            draw_branch(window,branch,&seg_base_pos * &Translation3::new(0.0, node.length* t, 0.0));
+            draw_node(window,tree,*branch, &seg_base_pos * &Translation3::new(0.0, node.length* t, 0.0));
         }
 
         base_pos = seg_base_pos * &Translation3::new(0.0, node.length, 0.0);
@@ -57,5 +58,4 @@ fn draw_branch(window: &mut Window, tree: &TreeBranch, mut base_pos : Isometry3<
 
         window.draw_line(&seg_start, &seg_end, &Point3::new(0.6, 0.4, 0.2));
 
-    }
 }

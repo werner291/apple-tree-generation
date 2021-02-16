@@ -10,6 +10,7 @@ edition = "2018"
 rand = "0.8.3"
 nalgebra = "0.24.1"
 ncollide3d = "0.27.0"
+generational-arena = "0.2.8"
 
 [dev-dependencies]
 kiss3d = "0.29.0"
