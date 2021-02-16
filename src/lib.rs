@@ -1,3 +1,5 @@
+pub mod mesh_utilities;
+
 use std::boxed::Box;
 use std::default::Default;
 use std::prelude::v1::Vec;
@@ -11,7 +13,6 @@ use std::borrow::ToOwned;
 use std::convert::From;
 use generational_arena::{Arena, Index};
 
-// pub mod mesh_utilities;
 extern crate nalgebra as na;
 
 pub struct TreeNodeData {
